@@ -43,6 +43,11 @@ gulp.task('del', function() {
   return del.sync(dest);
 });
 
+gulp.task('deploy', ['del', 'build'], function() {
+  return gulp.src(dest + '/**/*')
+    .pipe(plugins.ghPages());
+});
+
 // Default task to be run with `gulp`
 gulp.task('default', ['del', 'browser-sync'], function() {
   gulp.watch('jade/*.jade', ['jade']);
