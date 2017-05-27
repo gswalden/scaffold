@@ -1,68 +1,50 @@
-var gulp        = require('gulp');
-var browserSync = require('browser-sync');
-var reload      = browserSync.reload;
-var less        = require('gulp-less');
-var minifyCSS   = require('gulp-minify-css');
-var autoprefixer = require('gulp-autoprefixer');
-var plumber     = require('gulp-plumber');
-var notify      = require('gulp-notify');
-var jade        = require('gulp-jade');
-var uglify      = require('gulp-uglify');
-var sourcemaps  = require('gulp-sourcemaps');
-var jshint      = require('gulp-jshint');
+'use strict';
+
+const gulp      = require('gulp')
+  , del         = require('del')
+  , browserSync = require('browser-sync').create()
+  , plugins     = require('gulp-load-plugins')()
+  , dest        = './build'
+  ;
 
 // browser-sync task for starting the server.
-gulp.task('browser-sync', function() {
-  browserSync({
+gulp.task('browser-sync', ['build'], function() {
+  browserSync.init({
     server: {
-      baseDir: './'
-    }
+      baseDir: dest
+    },
+    files: dest + '/*'
   });
 });
 
-gulp.task('less', function() {
-  return gulp.src('css/src/*.less')
-    .pipe(plumber())
-    .pipe(less())
-    .pipe(autoprefixer())
-    .pipe(minifyCSS())
-    .pipe(gulp.dest('css/dist'))
-    .pipe(reload({ stream: true }))
-    .pipe(notify('Finished file: <%= file.relative %>'))
-  ;
-});
-
 gulp.task('js', function() {
-  return gulp.src('js/src/*.js')
-    .pipe(plumber())
-    .pipe(jshint())
-    .pipe(jshint.reporter('jshint-stylish'))
-    .pipe(sourcemaps.init())
-    .pipe(uglify())
-    .pipe(sourcemaps.write('maps'))
-    .pipe(gulp.dest('js/dist'))
-    .pipe(reload({ stream: true }))
-    .pipe(notify('Finished file: <%= file.relative %>'))
+  return gulp.src('js/*.js')
+    .pipe(plugins.plumber())
+    .pipe(plugins.sourcemaps.init())
+    .pipe(plugins.uglify())
+    .pipe(plugins.sourcemaps.write('maps'))
+    .pipe(gulp.dest(dest))
+    .pipe(plugins.notify('Finished file: <%= file.relative %>'))
   ;
 });
 
 gulp.task('jade', function() {
   return gulp.src('jade/index.jade')
-    .pipe(plumber())
-    .pipe(jade())
-    .pipe(gulp.dest(''))
-    .pipe(reload({ stream: true }))
-    .pipe(notify('Finished file: <%= file.relative %>'))
+    .pipe(plugins.plumber())
+    .pipe(plugins.jade())
+    .pipe(gulp.dest(dest))
+    .pipe(plugins.notify('Finished file: <%= file.relative %>'))
   ;
 });
 
-gulp.task('bs-reload', function() {
-  browserSync.reload();
+gulp.task('build', ['js', 'jade']);
+
+gulp.task('del', function() {
+  return del.sync(dest);
 });
 
 // Default task to be run with `gulp`
-gulp.task('default', ['jade', 'less', 'browser-sync'], function() {
-  gulp.watch('css/src/*.less', ['less']);
+gulp.task('default', ['del', 'browser-sync'], function() {
   gulp.watch('jade/*.jade', ['jade']);
-  gulp.watch('js/src/*.js', ['js']);
+  gulp.watch('js/*.js', ['js']);
 });
